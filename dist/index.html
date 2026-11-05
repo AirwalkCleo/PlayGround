@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#170d09" />
+    <meta name="description" content="Dry Gulch: Dragon Territory — a 3D wild west dragon-hunting game." />
+    <title>Dry Gulch: Dragon Territory</title>
+    <link rel="preload" href="/fonts/rye.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/fonts/special-elite.ttf" as="font" type="font/ttf" crossorigin />
+    <script type="module" crossorigin src="/assets/index-BFxh5g0e.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Ce0o01PI.css">
+  </head>
+  <body>
+    <canvas id="game-canvas" aria-label="Dry Gulch game world"></canvas>
+
+    <div id="vignette" aria-hidden="true"></div>
+    <div id="grain" aria-hidden="true"></div>
+    <div id="sun-glare" aria-hidden="true"></div>
+
+    <div id="loading-screen">
+      <div class="loading-mark">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <path d="M50 8 58 33 78 23 66 44 91 50 67 59 78 81 57 70 50 93 43 70 22 81 33 59 9 50 34 44 22 23 42 33Z" />
+        </svg>
+      </div>
+      <p>STRIKING A MATCH</p>
+      <div class="loading-line"><span></span></div>
+    </div>
+
+    <div id="hud" class="hidden" aria-live="polite">
+      <header class="hud-top">
+        <div class="hud-brand">
+          <span class="brand-main">DRY GULCH</span>
+          <span class="brand-sub">DRAGON TERRITORY</span>
+        </div>
+
+        <div class="wave-block">
+          <span class="micro-label">THE BROOD</span>
+          <div class="wave-row">
+            <strong id="wave-label">WAVE I</strong>
+            <div id="wave-pips" class="wave-pips" aria-hidden="true">
+              <i class="active"></i><i></i><i></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="top-stats">
+          <div class="top-stat">
+            <span class="micro-label">BOUNTY</span>
+            <strong id="score">$0</strong>
+          </div>
+          <div class="top-stat clock-stat">
+            <span class="micro-label">TIME</span>
+            <strong id="timer">00:00</strong>
+          </div>
+          <button id="mute-btn" class="icon-btn" title="Toggle sound (M)" aria-label="Toggle sound">
+            <svg class="sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4Zm-2.5-8v2.1a6.5 6.5 0 0 1 0 11.8V20a8.5 8.5 0 0 0 0-16Z"/></svg>
+            <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.6 3 2.2-2.2-1.4-1.4-2.2 2.2-2.2-2.2-1.4 1.4 2.2 2.2-2.2 2.2 1.4 1.4 2.2-2.2 2.2 2.2 1.4-1.4-2.2-2.2Z"/></svg>
+          </button>
+          <button id="pause-btn" class="icon-btn" title="Pause (Esc)" aria-label="Pause">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6V5Zm8 0h4v14h-4V5Z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="objective-card">
+        <span class="micro-label">OBJECTIVE</span>
+        <span id="objective-text">Clear the skies over Dry Gulch</span>
+        <span id="enemy-count">3 WYVERNS</span>
+      </section>
+
+      <div id="boss-wrap" class="hidden">
+        <div class="boss-label"><span>THE MATRIARCH</span><span id="boss-percent">100%</span></div>
+        <div class="boss-track"><span id="boss-fill"></span></div>
+      </div>
+
+      <div id="crosshair" aria-hidden="true">
+        <span class="ch top"></span><span class="ch right"></span><span class="ch bottom"></span><span class="ch left"></span>
+        <span class="ch-dot"></span>
+        <span id="hitmarker"><i></i><i></i><i></i><i></i></span>
+      </div>
+      <div id="target-label" class="hidden">WYVERN <span>IN RANGE</span></div>
+
+      <div id="hit-flash" aria-hidden="true"></div>
+      <div id="damage-flash" aria-hidden="true"></div>
+
+      <div id="wave-banner" class="hidden">
+        <span id="wave-banner-kicker">WAVE I</span>
+        <h2 id="wave-banner-title">THE FIRST BROOD</h2>
+        <p id="wave-banner-sub">They smell the horses from the mesa.</p>
+      </div>
+
+      <div id="toast" class="hidden"></div>
+      <div id="kill-feed"></div>
+      <div id="damage-numbers"></div>
+
+      <footer class="hud-bottom">
+        <div class="health-panel">
+          <div class="panel-heading"><span class="micro-label">GRIT</span><strong id="health-number">100</strong></div>
+          <div class="health-track"><span id="health-fill"></span><i class="health-notch" style="left:25%"></i><i class="health-notch" style="left:50%"></i><i class="health-notch" style="left:75%"></i></div>
+          <div class="health-sub"><span id="health-state">STEADY</span><span>KEEP YOUR BOOTS UNDER YOU</span></div>
+        </div>
+
+        <div class="reload-panel hidden" id="reload-panel">
+          <span class="micro-label">RELOADING</span>
+          <div class="reload-track"><span id="reload-fill"></span></div>
+        </div>
+
+        <div class="ammo-panel">
+          <div class="ammo-copy">
+            <span class="micro-label">SIX-SHOOTER</span>
+            <strong><span id="ammo-count">6</span><em>/ 6</em></strong>
+          </div>
+          <div id="cylinder" class="cylinder" aria-label="Ammo">
+            <i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="dynamite-count">
+            <svg viewBox="0 0 36 24" aria-hidden="true"><path d="M6 5h20v14H6z"/><path d="M26 10h4v4h-4z"/><path d="M31 8c2-3 3-1 2 1" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+            <span><b id="dynamite-count">2</b> DYNAMITE</span>
+          </div>
+        </div>
+      </footer>
+
+      <div id="hint-strip">
+        <span><kbd>WASD</kbd> MOVE</span>
+        <span><kbd>SHIFT</kbd> SPUR</span>
+        <span><kbd>R</kbd> RELOAD</span>
+        <span><kbd>G</kbd> DYNAMITE</span>
+      </div>
+    </div>
+
+    <section id="start-screen" class="screen">
+      <div class="screen-wash"></div>
+      <div class="start-wrap">
+        <div class="start-copy">
+          <div class="eyebrow"><span></span> A TALL TALE FROM THE NEW FRONTIER <span></span></div>
+          <h1 class="game-logo"><span>DRY</span><span>GULCH</span></h1>
+          <div class="logo-rule"><span></span><b>DRAGON TERRITORY</b><span></span></div>
+          <p class="lede">The railroad brought settlers.<br />The dragons came for the rest.</p>
+          <p class="brief">You are the last dragon hunter west of the Pecos. Hold the town until the brood is broken — or become ash on the wind.</p>
+
+          <div class="start-actions">
+            <button id="start-btn" class="primary-btn" aria-label="Start game">
+              <span class="btn-ink">SADDLE UP</span>
+              <span class="btn-arrow" aria-hidden="true">→</span>
+            </button>
+            <div class="start-meta"><span>3 WAVES</span><i></i><span>1 MATRIARCH</span><i></i><span>NO SECOND CHANCES</span></div>
+          </div>
+
+          <div class="controls-grid">
+            <div><kbd>W A S D</kbd><span>Ride the street</span></div>
+            <div><kbd>MOUSE</kbd><span>Look / aim</span></div>
+            <div><kbd>LMB</kbd><span>Fan the hammer</span></div>
+            <div><kbd>R</kbd><span>Reload</span></div>
+            <div><kbd>SHIFT</kbd><span>Spur</span></div>
+            <div><kbd>G</kbd><span>Light dynamite</span></div>
+          </div>
+          <p class="audio-note"><span class="audio-dot"></span> HEADPHONES RECOMMENDED · SOUND ON BY DEFAULT</p>
+        </div>
+
+        <aside class="wanted-poster" aria-label="Wanted poster">
+          <div class="poster-pin"></div>
+          <div class="poster-top">WANTED</div>
+          <div class="poster-sub">DEAD OR ALIVE</div>
+          <div class="poster-art">
+            <svg viewBox="0 0 200 150" aria-hidden="true">
+              <path d="M104 31c-9-12-19-18-31-19 5 11 13 19 23 24l-12 12c-21 2-34 18-37 39l-20-12 10 25-21 10 25 5c12 20 34 24 56 17l9 9 7-15 16 3-10-15c13-14 17-31 10-52l13-19-26 9-12-11Zm-9 45a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z"/>
+            </svg>
+          </div>
+          <div class="poster-name">THE MATRIARCH</div>
+          <div class="poster-crime">Murder. Arson. Stock theft.<br />Wingspan: 40 feet. Breath: hellfire.</div>
+          <div class="poster-reward"><span>$</span>5,000<span class="reward-dead">DEAD</span></div>
+          <div class="poster-foot">BY ORDER OF THE DRY GULCH TERRITORIAL AUTHORITY</div>
+        </aside>
+      </div>
+      <div class="start-foot"><span>EST. 1873 · POPULATION 41</span><span>THE SKIES ARE NOT YOURS</span></div>
+    </section>
+
+    <section id="pause-screen" class="screen hidden">
+      <div class="modal">
+        <span class="kicker">HOLD YOUR FIRE</span>
+        <h2>PAUSED</h2>
+        <p>The dust settles. The dragons circle.</p>
+        <button id="resume-btn" class="primary-btn"><span class="btn-ink">BACK TO THE FIGHT</span><span class="btn-arrow">→</span></button>
+        <div class="modal-actions">
+          <button id="restart-btn" class="ghost-btn">RESTART HUNT</button>
+          <button id="pause-mute-btn" class="ghost-btn">SOUND: ON</button>
+        </div>
+        <span class="modal-note">ESC to resume</span>
+      </div>
+    </section>
+
+    <section id="end-screen" class="screen hidden">
+      <div class="end-card">
+        <span id="end-kicker" class="kicker">THE GULCH STANDS</span>
+        <h2 id="end-title">BROOD BROKEN</h2>
+        <p id="end-copy">The last of the Matriarch's line falls into the dust. Dry Gulch will sing about this one.</p>
+        <div class="end-stats">
+          <div><span>BOUNTY</span><strong id="end-score">$0</strong></div>
+          <div><span>SURVIVED</span><strong id="end-time">00:00</strong></div>
+          <div><span>ACCURACY</span><strong id="end-accuracy">0%</strong></div>
+        </div>
+        <button id="again-btn" class="primary-btn"><span class="btn-ink">RIDE AGAIN</span><span class="btn-arrow">→</span></button>
+        <p class="end-note">“Ain't no dragon that can't be put down with enough grit and a good revolver.”</p>
+      </div>
+    </section>
+
+    <div id="touch-ui" class="hidden" aria-hidden="true">
+      <div id="joystick" class="joystick">
+        <div class="joystick-ring"></div>
+        <div id="joystick-knob" class="joystick-knob"></div>
+      </div>
+      <div class="touch-actions">
+        <button class="touch-btn small" data-action="dynamite" aria-label="Throw dynamite">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h12v10H4z"/><path d="M16 10h3v4h-3z"/><path d="M20 8c2-3 3-1 2 1" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <button class="touch-btn small" data-action="reload" aria-label="Reload">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a8 8 0 1 0 7.4 11h-2.2A5.9 5.9 0 1 1 12 6.1V9l4-4-4-4v3Z"/></svg>
+        </button>
+        <button class="touch-btn fire" data-action="fire" aria-label="Fire revolver">
+          <span class="fire-ring"></span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h14v6H3z"/><path d="M17 9h3v3h-3z"/><path d="M5 15h5v4H5z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="error-screen" class="hidden">
+      <div><h2>THE TRAIL WENT COLD</h2><p id="error-copy">This browser could not open the frontier. Try a modern browser with WebGL enabled.</p></div>
+    </div>
+
+  </body>
+</html>
